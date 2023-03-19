@@ -1,5 +1,6 @@
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
+import { Lambdas } from './lambdas';
 
 type StackProps = cdk.StackProps & { restApiStageName: string };
 
@@ -7,12 +8,14 @@ export class ServerlessLedgerStack extends cdk.Stack {
   private dynamoTable: cdk.aws_dynamodb.Table;
   private restApi: cdk.aws_apigateway.RestApi;
   private restApiRequestValidator: cdk.aws_apigateway.RequestValidator;
+  private lambdas: Lambdas;
 
   constructor(scope: Construct, id: string, props: StackProps) {
     super(scope, id, props);
 
     this.newDynamoTable();
     this.newRestApi(props.restApiStageName);
+    this.newLambdas();
   }
 
   private newDynamoTable() {
@@ -40,5 +43,15 @@ export class ServerlessLedgerStack extends cdk.Stack {
     });
 
     this.restApi.root.addMethod('ANY', new cdk.aws_apigateway.MockIntegration());
+  }
+
+  private newLambdas() {
+    this.lambdas = new Lambdas(this, 'Lambdas', {
+      region: this.region,
+      tableName: this.dynamoTable.tableName,
+    });
+
+    this.dynamoTable.grantWriteData(this.lambdas.createAccountLambda);
+    this.dynamoTable.grantWriteData(this.lambdas.transferFundsLambda);
   }
 }

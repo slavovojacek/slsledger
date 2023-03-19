@@ -1,0 +1,7 @@
+{
+  "name": "functions",
+  "private": true,
+  "dependencies": {
+    "aws-xray-sdk-core": "^3.4.1"
+  }
+}
