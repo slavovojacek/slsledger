@@ -9,3 +9,7 @@ diff:
 .PHONY: deploy
 deploy:
 	cdk deploy LedgerDev --profile slsledger
+
+.PHONY: destroy
+destroy:
+	cdk destroy LedgerDev --profile slsledger
