@@ -10,7 +10,9 @@ type Props = {
 export class Lambdas extends Construct {
   private static readonly pathToFunctions = join(__dirname, 'functions');
   createAccountLambda: cdk.aws_lambda.Function;
+  createAccountLambdaSchema: cdk.aws_apigateway.JsonSchema;
   transferFundsLambda: cdk.aws_lambda.Function;
+  transferFundsLambdaSchema: cdk.aws_apigateway.JsonSchema;
 
   constructor(scope: Construct, id: string, props: Props) {
     super(scope, id);
@@ -44,9 +46,51 @@ export class Lambdas extends Construct {
 
   private newCreateAccountLambda(props: cdk.aws_lambda.FunctionProps) {
     this.createAccountLambda = new cdk.aws_lambda.Function(this, 'CreateAccountLambda', props);
+
+    this.createAccountLambdaSchema = {
+      type: cdk.aws_apigateway.JsonSchemaType.OBJECT,
+      properties: {
+        name: {
+          type: cdk.aws_apigateway.JsonSchemaType.STRING,
+          minLength: 2,
+          maxLength: 128,
+        },
+        denomination: {
+          type: cdk.aws_apigateway.JsonSchemaType.STRING,
+          minLength: 2,
+          maxLength: 5,
+        },
+      },
+      required: ['name', 'denomination'],
+      additionalProperties: false,
+    };
   }
 
   private newTransferFundsLambda(props: cdk.aws_lambda.FunctionProps) {
     this.transferFundsLambda = new cdk.aws_lambda.Function(this, 'TransferFundsLambda', props);
+
+    this.transferFundsLambdaSchema = {
+      type: cdk.aws_apigateway.JsonSchemaType.OBJECT,
+      properties: {
+        debtorAccountId: {
+          type: cdk.aws_apigateway.JsonSchemaType.STRING,
+          minLength: 8,
+          maxLength: 128,
+        },
+        creditorAccountId: {
+          type: cdk.aws_apigateway.JsonSchemaType.STRING,
+          minLength: 8,
+          maxLength: 128,
+        },
+        amount: { type: cdk.aws_apigateway.JsonSchemaType.NUMBER },
+        denomination: {
+          type: cdk.aws_apigateway.JsonSchemaType.STRING,
+          minLength: 2,
+          maxLength: 5,
+        },
+      },
+      required: ['debtorAccountId', 'creditorAccountId', 'amount', 'denomination'],
+      additionalProperties: false,
+    };
   }
 }

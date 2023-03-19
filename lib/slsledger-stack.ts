@@ -14,8 +14,8 @@ export class ServerlessLedgerStack extends cdk.Stack {
     super(scope, id, props);
 
     this.newDynamoTable();
-    this.newRestApi(props.restApiStageName);
     this.newLambdas();
+    this.newRestApi(props.restApiStageName);
   }
 
   private newDynamoTable() {
@@ -42,7 +42,29 @@ export class ServerlessLedgerStack extends cdk.Stack {
       validateRequestParameters: true,
     });
 
-    this.restApi.root.addMethod('ANY', new cdk.aws_apigateway.MockIntegration());
+    this.restApi.root
+      .resourceForPath('/accounts')
+      .addMethod('POST', new cdk.aws_apigateway.LambdaIntegration(this.lambdas.createAccountLambda), {
+        requestValidator: this.restApiRequestValidator,
+        requestModels: {
+          'application/json': new cdk.aws_apigateway.Model(this, 'CreateAccountLambdaModel', {
+            restApi: this.restApi,
+            schema: this.lambdas.createAccountLambdaSchema,
+          }),
+        },
+      });
+
+    this.restApi.root
+      .resourceForPath('/transfers')
+      .addMethod('POST', new cdk.aws_apigateway.LambdaIntegration(this.lambdas.transferFundsLambda), {
+        requestValidator: this.restApiRequestValidator,
+        requestModels: {
+          'application/json': new cdk.aws_apigateway.Model(this, 'TransferFundsLambdaModel', {
+            restApi: this.restApi,
+            schema: this.lambdas.transferFundsLambdaSchema,
+          }),
+        },
+      });
   }
 
   private newLambdas() {
